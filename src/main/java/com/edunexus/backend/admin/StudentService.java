@@ -1,9 +1,12 @@
 package com.edunexus.backend.admin;
 
+import java.util.UUID;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.edunexus.backend.auth.JWTService;
 import com.edunexus.backend.login.Login;
 import com.edunexus.backend.login.LoginRepository;
 import com.edunexus.backend.student.Student;
@@ -19,6 +22,7 @@ public class StudentService {
 	
 	@Autowired 
 	private PasswordEncoder passwordEncoder;
+
 	
 	public void createStudent(CreateStudentRequest req) {
 		String hashedPassword = passwordEncoder.encode(req.getStudentPassword());
@@ -26,15 +30,17 @@ public class StudentService {
 		//Also store the details in students repository because registration for student
 		//1- Once registered we add to the login table
 		
+		String studentId = "STD"+UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+		
 		//save the hashed password in login table
 				Login login = new Login();
-				login.setEdu_id(req.getStudentId());
+				login.setEdu_id(studentId);
 				login.setEdu_pass(hashedPassword);
 				loginRepo.save(login);
 				
 				Student student = new Student();	
 				
-				student.setStud_id(req.getStudentId());
+				student.setStud_id(studentId);
 				student.setStud_name(req.getStudentName());
 				student.setStud_email(req.getStudentEmail());
 				student.setStud_mobile(req.getStudentMobile());
@@ -46,7 +52,5 @@ public class StudentService {
 				student.setbasicFee(req.getBasicFee());	
 				
 				studentRepo.save(student);
-				
-				
 	}
 }

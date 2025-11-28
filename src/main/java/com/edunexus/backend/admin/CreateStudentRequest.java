@@ -1,7 +1,7 @@
 package com.edunexus.backend.admin;
 
 public class CreateStudentRequest {
-	private String studentId;
+//	private String studentId;
 	private String studentPassword;
 	private String studentName;
 	private String studentEmail;
@@ -13,12 +13,12 @@ public class CreateStudentRequest {
 	private double basicFee;
 	private String role;
 	
-	public String getStudentId() {
-		return studentId;
-	}
-	public void setStudentId(String studentId) {
-		this.studentId = studentId;
-	}
+//	public String getStudentId() {
+//		return studentId;
+//	}
+//	public void setStudentId(String studentId) {
+//		this.studentId = studentId;
+//	}
 	public String getStudentPassword() {
 		return studentPassword;
 	}
