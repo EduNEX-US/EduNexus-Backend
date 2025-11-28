@@ -3,8 +3,11 @@ package com.edunexus.backend.login;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.edunexus.backend.auth.JWTService;
+import com.edunexus.backend.config.SecurityConfiguration;
 import com.edunexus.backend.login.DTO.LoginRequest;
 import com.edunexus.backend.login.DTO.LoginResponse;
 import com.edunexus.backend.student.StudentRepository;
@@ -21,6 +24,12 @@ public class Login_RegistrationService {
 
     @Autowired
     private TeacherRepository teacherRepo;
+    
+	
+	@Autowired 
+	private PasswordEncoder passwordEncoder;
+    @Autowired 
+    private JWTService jwtService;
 
     public LoginResponse login(LoginRequest req) {
 
@@ -31,7 +40,7 @@ public class Login_RegistrationService {
 
         Login login = optionalLogin.get();
 
-        if (!login.getEdu_pass().equals(req.getEduPassword())) {
+        if (!passwordEncoder.matches(req.getEduPassword(), login.getEdu_pass())) {
             throw new RuntimeException("Incorrect password!");
         }
 
@@ -54,8 +63,10 @@ public class Login_RegistrationService {
             default:
                 throw new RuntimeException("Invalid role value provided!");
         }
+        
+        String token = jwtService.generateToken(req.getEduId(), req.getRole());
 
-        return new LoginResponse("token-" + req.getEduId(), req.getRole());
+        return new LoginResponse(token, req.getRole());
     }
 
 }

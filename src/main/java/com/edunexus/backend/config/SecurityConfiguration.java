@@ -7,7 +7,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Configuration
 public class SecurityConfiguration {
-
 	
 	@Bean 
 	public PasswordEncoder passwordEncoder() { //this will configure the password that user entering into hashed form
