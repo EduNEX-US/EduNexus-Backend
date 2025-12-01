@@ -36,6 +36,9 @@ public class Student {
 	@Column(name = "basicFee")  // Use backticks to preserve exact case
 	private double basicFee;
 	
+	@Column(name = "password")
+	private String password;
+	
 	public String getStud_id() {
 		return stud_id;	
 	}
@@ -107,5 +110,15 @@ public class Student {
 	public void setbasicFee(double basicFee) {
         this.basicFee = basicFee;
     }
+
+	public String getPassword() {
+		return password;
+	}
+
+	public void setPassword(String password) {
+		this.password = password;
+	}
+	
+	
 	
 }

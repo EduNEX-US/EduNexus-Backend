@@ -1,16 +1,30 @@
-package com.edunexus.backend.admin;
+package com.edunexus.backend.student;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class CreateStudentRequest {
 //	private String studentId;
-	private String studentPassword;
+	@JsonProperty("sName")
 	private String studentName;
+	@JsonProperty("pass")
+	private String studentPassword;
+	
+	@JsonProperty("email")
 	private String studentEmail;
+	@JsonProperty("sMob")
 	private long studentMobile;
-	private String studentClass;
+	@JsonProperty("address")
 	private String studentAddress;
+	
+	@JsonProperty("altMob")
 	private long studentAltMobile;
+	@JsonProperty("guardian")
 	private String studentGuardian;
+	@JsonProperty("sClass")
+	private String studentClass;
+	@JsonProperty("basicFee")
 	private double basicFee;
+	@JsonProperty("role")
 	private String role;
 	
 //	public String getStudentId() {

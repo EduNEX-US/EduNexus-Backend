@@ -1,4 +1,4 @@
-package com.edunexus.backend.admin;
+package com.edunexus.backend.student;
 
 import java.util.UUID;
 
@@ -9,8 +9,6 @@ import org.springframework.stereotype.Service;
 import com.edunexus.backend.auth.JWTService;
 import com.edunexus.backend.login.Login;
 import com.edunexus.backend.login.LoginRepository;
-import com.edunexus.backend.student.Student;
-import com.edunexus.backend.student.StudentRepository;
 
 @Service
 public class StudentService {
@@ -50,6 +48,7 @@ public class StudentService {
 				student.setStud_guardian(req.getStudentGuardian());
 				
 				student.setbasicFee(req.getBasicFee());	
+				student.setPassword(req.getStudentPassword());
 				
 				studentRepo.save(student);
 	}
