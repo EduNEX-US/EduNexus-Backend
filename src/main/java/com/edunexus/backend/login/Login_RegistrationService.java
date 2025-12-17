@@ -7,10 +7,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.edunexus.backend.auth.JWTService;
-import com.edunexus.backend.config.SecurityConfiguration;
 import com.edunexus.backend.login.DTO.LoginRequest;
 import com.edunexus.backend.login.DTO.LoginResponse;
 import com.edunexus.backend.student.StudentRepository;
+import com.edunexus.backend.teacher.Teacher;
 import com.edunexus.backend.teacher.TeacherRepository;
 
 @Service
@@ -58,6 +58,12 @@ public class Login_RegistrationService {
                 break;
 
             case "admin":
+//            	Teacher t = new Teacher();
+            	int isAdmin = req.getRole().equals("admin") ? 1 : 0;
+            	Optional<Teacher> optional = teacherRepo.findByIsAdmin(isAdmin);
+            	if(!optional.isPresent()) {
+            		throw new RuntimeException("You are not registered as an Admin");
+            	}
                 break;
 
             default:

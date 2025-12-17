@@ -6,7 +6,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import com.edunexus.backend.auth.JWTService;
 import com.edunexus.backend.login.Login;
 import com.edunexus.backend.login.LoginRepository;
 
