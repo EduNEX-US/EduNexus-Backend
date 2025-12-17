@@ -10,6 +10,6 @@ public class SecurityConfiguration {
 	
 	@Bean 
 	public PasswordEncoder passwordEncoder() { //this will configure the password that user entering into hashed form
-		return new BCryptPasswordEncoder();
+		return new BCryptPasswordEncoder(); //it uses a blowfish cipher internally and a slow hashing algorithm designed for password.
 	}
 }

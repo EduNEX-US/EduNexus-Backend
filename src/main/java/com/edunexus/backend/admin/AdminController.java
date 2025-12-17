@@ -1,6 +1,5 @@
 package com.edunexus.backend.admin;
 
-import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -31,7 +30,6 @@ public class AdminController {
 	public ResponseEntity<?> createStudent(@RequestBody CreateStudentRequest req) {
 		studentService.createStudent(req);
 		return ResponseEntity.ok(new APIResponse("Student registered successfully"));
-
 	}
 	
 	@PostMapping("teacher/register")
