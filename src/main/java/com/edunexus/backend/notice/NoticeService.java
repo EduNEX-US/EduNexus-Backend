@@ -1,6 +1,7 @@
 package com.edunexus.backend.notice;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,5 +26,15 @@ public class NoticeService {
 	     n.setDate(req.getDate());
 	        
 	    return repo.save(n);   
+	}
+	
+	public Notice getNoticeById(String id) {
+		Optional<Notice> optionalNotice = repo.findById(id);
+		
+		if(!optionalNotice.isPresent()) {
+			throw new RuntimeException("Notice not found");
+		}
+		Notice notice = optionalNotice.get();
+		return notice;
 	}
 }
