@@ -15,12 +15,21 @@ import io.jsonwebtoken.security.Keys;
 public class JWTService {
 	private static final String SECRET = "SuperSecretEduNexusKeyThatIsAtLeast32Chars";
 	
-	private static final long EXPIRATION_MILLIS = 1000 * 60 * 30; //30 minutes for now
+	private static final long EXPIRATION_MILLIS = 1000 * 60 * 60 * 2; 
 	
 	private Key getSigningKey() {
 		return Keys.hmacShaKeyFor(SECRET.getBytes(StandardCharsets.UTF_8)); //converts the secret key to UTF-8 format
 	}
 	
+	public String extractEduId(String token) {
+	    return validateAndExtract(token).getSubject();  // subject = userId (eduId)
+	}
+
+	public String extractRole(String token) {
+	    Object role = validateAndExtract(token).get("role");
+	    return role == null ? null : role.toString();
+	}
+
 	public String generateToken(String userId, String role) { //will generate a json token as user logins with the credentials
 		Date now = new Date(); //get the date object
 		Date expiry = new Date(now.getTime() + EXPIRATION_MILLIS);
