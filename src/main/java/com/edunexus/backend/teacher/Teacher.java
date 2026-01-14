@@ -36,23 +36,12 @@ public class Teacher {
 	@Column(name = "teacher_qualification")
 	private String teacher_qualification;
 	
-	@Column(name = "password")
-	private String password;
-	
 	public String getTeacher_qualification() {
 		return teacher_qualification;
 	}
 
 	public void setTeacher_qualification(String teacher_qualification) {
 		this.teacher_qualification = teacher_qualification;
-	}
-
-	public String getPassword() {
-		return password;
-	}
-
-	public void setPassword(String password) {
-		this.password = password;
 	}
 
 	public String getTeacher_id() {

@@ -4,30 +4,58 @@ import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.edunexus.backend.login.DTO.LoginRequest;
 import com.edunexus.backend.login.DTO.LoginResponse;
 
+//@RestController
+//@CrossOrigin("*")
+//public class LoginController {
+//	@Autowired
+//	private Login_RegistrationService loginService;
+//	
+//	@PostMapping("/login")
+//	public ResponseEntity<?> login(@RequestBody LoginRequest req) {
+//	    try {
+//	        LoginResponse response = loginService.login(req);
+//	        return ResponseEntity.ok(response);
+//	    } 
+//	    catch (Exception e) {
+//	        return ResponseEntity.status(401)
+//	                .body(Map.of("error", e.getMessage())); // return real message
+//	    }
+//	}
+//
+//}
 @RestController
-@CrossOrigin("*")
+@RequestMapping("/auth")
 public class LoginController {
-	@Autowired
-	private Login_RegistrationService loginService;
-	
-	@PostMapping("/login")
-	public ResponseEntity<?> login(@RequestBody LoginRequest req) {
-	    try {
-	        LoginResponse response = loginService.login(req);
-	        return ResponseEntity.ok(response);
-	    } 
-	    catch (Exception e) {
-	        return ResponseEntity.status(401)
-	                .body(Map.of("error", e.getMessage())); // return real message
-	    }
-	}
 
+    @Autowired
+    private Login_RegistrationService loginService;
+
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@RequestBody LoginRequest req) {
+        try {
+            LoginResponse response = loginService.login(req);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.status(401).body(Map.of("error", e.getMessage()));
+        }
+    }
+    
+    @PostMapping("/change-password")
+    public ResponseEntity<?> changePassword(Authentication auth, @RequestBody ChangePasswordRequest req) {
+        try {
+            loginService.changePassword(auth, req);
+            return ResponseEntity.ok(new ChangePasswordResponse("Password changed successfully"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
 }

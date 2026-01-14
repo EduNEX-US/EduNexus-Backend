@@ -15,6 +15,22 @@ public class Login {
 	@Column(name = "edu_pass")
 	private String eduPassword;
 
+	@Column(name = "role")
+	private String role;
+	
+	@Column(name = "must_change_password")
+	private boolean mustChangePassword;
+	
+	public Login() {
+		
+	}
+	
+	public Login(String eduId, String password, String role) {
+        this.eduId = eduId;
+        this.eduPassword = password;
+        this.role = role;
+    }
+	
 	public String getEdu_id() {
 		return eduId;
 	}
@@ -31,4 +47,19 @@ public class Login {
 		this.eduPassword = edu_pass;
 	}
 	
+	public String getRole() {
+		return this.role;
+	}
+	
+	public void setRole(String role) {
+		this.role = role;
+	}
+	
+	public boolean isMustChangePassword() {
+        return mustChangePassword;
+    }
+
+    public void setMustChangePassword(boolean mustChangePassword) {
+        this.mustChangePassword = mustChangePassword;
+    }
 }

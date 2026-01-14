@@ -2,10 +2,12 @@ package com.edunexus.backend.student;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+
 public class CreateStudentRequest {
 //	private String studentId;
 	@JsonProperty("sName")
 	private String studentName;
+	
 	@JsonProperty("pass")
 	private String studentPassword;
 	
