@@ -22,6 +22,9 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
             	    .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
+            	    // ✅ allow image files to be fetched publicly
+            	    .requestMatchers(HttpMethod.GET, "/uploads/**").permitAll()
+            	    
             	    // only login is public
             	    .requestMatchers(HttpMethod.POST, "/auth/login").permitAll()
 
@@ -33,6 +36,7 @@ public class SecurityConfig {
 
             	    .requestMatchers(HttpMethod.DELETE, "/admin/teacher/**").hasRole("ADMIN")
 
+            	    .requestMatchers("/teacher/**").hasAnyRole("TEACHER", "ADMIN")
             	    // me must be authenticated
             	    .requestMatchers("/me").authenticated()
 

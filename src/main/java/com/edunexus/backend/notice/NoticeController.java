@@ -6,9 +6,11 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -44,7 +46,29 @@ public class NoticeController {
     	} catch(Exception e) {
     		return ResponseEntity.status(500).body("Error fetching the notice");
     	}
-    	
     }
+    
+    @PutMapping("/{id}")
+    public ResponseEntity<?> updateNotice(@PathVariable String id, @RequestBody NoticeRequest req) {
+        try {
+            Notice updated = service.updateNotice(id, req);
+            return ResponseEntity.ok(Map.of("message", "Notice updated", "notice", updated));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body("Error updating notice");
+        }
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteNotice(@PathVariable String id) {
+        try {
+            service.deleteNotice(id);
+            return ResponseEntity.ok(Map.of("message", "Notice deleted", "id", id));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body("Error deleting notice");
+        }
+    }
+
     
 }

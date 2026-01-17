@@ -37,4 +37,23 @@ public class NoticeService {
 		Notice notice = optionalNotice.get();
 		return notice;
 	}
+	
+	public Notice updateNotice(String id, NoticeRequest req) {
+	    Notice existing = repo.findById(id)
+	            .orElseThrow(() -> new RuntimeException("Notice not found"));
+
+	    existing.setTitle(req.getTitle());
+	    existing.setBody(req.getBody());
+	    existing.setDate(req.getDate()); // or keep old date if you want
+
+	    return repo.save(existing);
+	}
+
+	public void deleteNotice(String id) {
+	    if (!repo.existsById(id)) {
+	        throw new RuntimeException("Notice not found");
+	    }
+	    repo.deleteById(id);
+	}
+
 }

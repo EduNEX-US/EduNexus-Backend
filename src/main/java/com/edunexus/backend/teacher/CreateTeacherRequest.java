@@ -34,7 +34,16 @@ public class CreateTeacherRequest {
 	@JsonProperty("role") // if role is admin/teacher
 	private String role; 
 	
+	@JsonProperty("image")
+	private String imageUrl;
+	public String getImageUrl() {
+		return imageUrl; 
+	}
 	
+	public void setImageUrl(String imageUrl) {
+		this.imageUrl = imageUrl; 
+	}
+
 	public String getTeacherQualification() {
 		return teacherQualification;
 	}
