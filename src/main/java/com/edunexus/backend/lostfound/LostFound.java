@@ -16,7 +16,7 @@ public class LostFound {
 	private String itemName;
 
 	@Column(name = "item_comments")
-	private String itemComments;
+	private String itemDescription;
 
 	@Column(name = "delivered")
 	private boolean delivered;
@@ -27,7 +27,9 @@ public class LostFound {
 
 	@Column(name = "assignedTo")
 	private String assignedTo;
-	
+
+	@Column(name = "image_url", length = 300)
+	private String imageUrl;
 	
 	public String getItemId() {
 		return itemId;
@@ -46,12 +48,12 @@ public class LostFound {
 	}
 
 
-	public String getItemComments() {
-		return itemComments;
+	public String getItemDescription() {
+		return itemDescription;
 	}
 
-	public void setItemComments(String itemComments) {
-		this.itemComments = itemComments;
+	public void setItemDescription(String itemDescription) {
+		this.itemDescription = itemDescription;
 	}
 
 	public boolean isDelivered() {
@@ -79,5 +81,11 @@ public class LostFound {
 	}
 
 	
+	public String getImageUrl() {
+		return this.imageUrl;
+	}
 	
+	public void setImageUrl(String img) {
+		this.imageUrl = img;
+	}
 }

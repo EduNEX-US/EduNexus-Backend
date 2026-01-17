@@ -36,6 +36,12 @@ public class Teacher {
 	@Column(name = "teacher_qualification")
 	private String teacher_qualification;
 	
+	@Column(name = "image_url", length = 300)
+	private String imageUrl;
+
+	public String getImageUrl() { return imageUrl; }
+	public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
+
 	public String getTeacher_qualification() {
 		return teacher_qualification;
 	}
