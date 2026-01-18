@@ -19,9 +19,13 @@ public class StudentController {
 	    public List<StudentDTO> getStudents() {
 	       return studentRepo.findAll()
 	       .stream()
-           .map(student -> new StudentDTO(
-                   student.getStud_id(),
-                   student.getStud_name()
+           .map(s -> new StudentDTO(
+        		   s.getStud_id(),
+                   s.getStud_name(),
+                   s.getStud_email(),
+                   s.getStud_address(),
+                   s.getStud_guardian(),
+                   s.getStud_mobile()
            ))
            .toList();
 	    }

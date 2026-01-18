@@ -1,5 +1,6 @@
 package com.edunexus.backend.student;
 
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +23,30 @@ public class StudentService {
 	@Autowired 
 	private PasswordEncoder passwordEncoder;
 
+
+	public List<StudentDTO> getStudentsByClass(int studClass) {
+	    return studentRepo.findByStudClass(studClass)
+	            .stream()
+	            .map(s -> new StudentDTO(
+	                    s.getStud_id(),
+	                    s.getStud_name(),
+	                    s.getStud_email(),
+	                    s.getStud_address(),
+	                    s.getStud_guardian(),
+	                    s.getStud_mobile()
+	            ))
+	            .toList();
+	}
+
+	@Transactional
+	public void deleteStudentById(String studentId) {
+	    if (!studentRepo.existsById(studentId)) {
+	        throw new RuntimeException("Student not found");
+	    }
+	    studentRepo.deleteById(studentId);
+	}
+
+    
 	@Transactional
 	public void createStudent(CreateStudentRequest req) {
 
@@ -33,7 +58,7 @@ public class StudentService {
 	    login.setEdu_id(studentId);
 	    login.setEdu_pass(hashedPassword);
 	    login.setRole("student");   // 🔥 FORCE ROLE
-
+	    login.setMustChangePassword(true);
 	    loginRepo.save(login);
 
 	    Student student = new Student();
@@ -45,9 +70,41 @@ public class StudentService {
 	    student.setStud_address(req.getStudentAddress());
 	    student.setStud_alt_mob(req.getStudentAltMobile());
 	    student.setStud_guardian(req.getStudentGuardian());
-	    student.setbasicFee(req.getBasicFee());
 
 	    studentRepo.save(student);
 	}
+	
+	@Transactional
+    public String createStudentAndReturnId(CreateStudentRequest req) {
+
+        String studentId = "STD" + UUID.randomUUID().toString().substring(0,8).toUpperCase();
+
+        String hashedPassword = passwordEncoder.encode(req.getStudentPassword());
+
+        // normalize role safely
+        String role = (req.getRole() == null) ? "student" : req.getRole().trim().toLowerCase();
+
+        // 1) Save login row
+        Login login = new Login();
+        login.setEdu_id(studentId);
+        login.setEdu_pass(hashedPassword);
+        login.setRole("student");
+        login.setMustChangePassword(true); // ✅ force change on first login
+        loginRepo.save(login);
+
+        // 2) Save teacher profile
+        Student student = new Student();
+        student.setStud_id(studentId);
+        student.setStud_name(req.getStudentName());
+        student.setStud_email(req.getStudentEmail());
+        student.setStud_mobile(req.getStudentMobile());
+        student.setStud_alt_mob(req.getStudentAltMobile());
+        student.setStud_guardian(req.getStudentGuardian());
+        student.setStud_class(req.getStudentClass());
+        student.setStud_address(req.getStudentAddress());
+        student.setImageUrl(req.getImageUrl());
+        studentRepo.save(student);
+        return studentId;
+    }
 
 }

@@ -46,7 +46,7 @@ public class AdminImportService {
                     req.setTeacherAdd(safeGet(record, "tAddress"));
 
                     // keep as string like "7,8,10"
-                    req.setTeacherClass(normalizeClasses(safeGet(record, "tClass")));
+                    req.setTeacherClass(parseInt(safeGet(record, "tClass")));
 
                     req.setTeacherQualification(safeGet(record, "qualification"));
 
