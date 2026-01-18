@@ -1,44 +1,64 @@
 package com.edunexus.backend.marks;
 
 import java.util.List;
-import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 @RestController
-@RequestMapping("/api/marks")
-@CrossOrigin(origins = "http://localhost:5173") // Allow frontend access
+@RequestMapping("/marks")
+@CrossOrigin("*")
 public class MarksController {
 
-    @Autowired
-    private AutomationService automationService;
+    @Autowired private MarksService marksService;
 
-    @PostMapping("/upload")
-    public ResponseEntity<String> uploadMarks(@RequestParam("file") MultipartFile file) {
-        String result = automationService.processMarksCSV(file);
-        if (result.startsWith("Error")) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(result);
-        }
-        return ResponseEntity.ok(result);
+    @PostMapping("/manual")
+    public ResponseEntity<?> uploadManual(Authentication auth, @RequestBody MarksManualRequest req) {
+        String teacherId = (String) auth.getPrincipal();
+        return ResponseEntity.ok(marksService.uploadManual(teacherId, req));
     }
-    
-    @GetMapping
-    public ResponseEntity<?> getMarks() {
-    	try {
-    		List<Marks> marks = automationService.getAllMarks();
-    		return ResponseEntity.status(HttpStatus.OK).body(marks);
-    	}
-    	catch(Exception e) {
-    		return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "Internal server error"));
-    	}
+
+    @PostMapping(value = "/csv", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> uploadCsv(
+            Authentication auth,
+            @RequestParam("classId") int classId,
+            @RequestParam("examSession") String examSession,
+            @RequestParam("resultDate") String resultDate,
+            @RequestParam("file") MultipartFile file
+    ) throws Exception {
+        String teacherId = (String) auth.getPrincipal();
+        return ResponseEntity.ok(marksService.uploadCsv(teacherId, classId, examSession, resultDate, file));
+    }
+
+    @GetMapping("/teacher")
+    public ResponseEntity<?> getForTeacher(
+            Authentication auth,
+            @RequestParam("classId") int classId,
+            @RequestParam("examSession") String examSession
+    ) {
+        String teacherId = (String) auth.getPrincipal();
+        List<Marks> rows = marksService.getMarksForClassSession(teacherId, classId, examSession);
+        return ResponseEntity.ok(rows);
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<?> getForStudent(
+            Authentication auth,
+            @RequestParam("examSession") String examSession
+    ) {
+        String studentId = (String) auth.getPrincipal();
+        return ResponseEntity.ok(marksService.getMyMarksForSession(studentId, examSession));
+    }
+
+    // ✅ ADD THIS
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteMarks(Authentication auth, @PathVariable Long id) {
+        String teacherId = (String) auth.getPrincipal();
+        marksService.deleteMarksById(teacherId, id);
+        return ResponseEntity.ok().build();
     }
 }

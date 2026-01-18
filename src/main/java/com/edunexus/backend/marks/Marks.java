@@ -4,26 +4,35 @@ import java.time.LocalDate;
 
 import com.edunexus.backend.student.Student;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 
 @Entity
-@Table(name = "marks")
+@Table(
+    name = "marks",
+    uniqueConstraints = {
+        // ✅ One row per student per exam session
+        @UniqueConstraint(name = "uk_marks_student_session", columnNames = {"student_id", "exam_session"})
+    }
+)
 public class Marks {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    // Student FK (your column name is student_id, referenced column is student_id)
     @ManyToOne
     @JoinColumn(name = "student_id", referencedColumnName = "student_id", nullable = false)
     private Student student;
+
+    // ✅ Store class with the marks (helps querying + audit)
+    @Column(name = "class_id", nullable = false)
+    private Integer classId;
+
+    // ✅ Session
+    @Enumerated(EnumType.STRING)
+    @Column(name = "exam_session", nullable = false)
+    private ExamSession examSession;
 
     @Column(name = "english")
     private Double english;
@@ -49,85 +58,41 @@ public class Marks {
     @Column(name = "result_date")
     private LocalDate resultDate;
 
-    // Getters and Setters
+    // Getters & Setters
 
-    public Long getId() {
-        return id;
-    }
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+    public Student getStudent() { return student; }
+    public void setStudent(Student student) { this.student = student; }
 
-    public Student getStudent() {
-        return student;
-    }
+    public Integer getClassId() { return classId; }
+    public void setClassId(Integer classId) { this.classId = classId; }
 
-    public void setStudent(Student student) {
-        this.student = student;
-    }
+    public ExamSession getExamSession() { return examSession; }
+    public void setExamSession(ExamSession examSession) { this.examSession = examSession; }
 
-    public Double getEnglish() {
-        return english;
-    }
+    public Double getEnglish() { return english; }
+    public void setEnglish(Double english) { this.english = english; }
 
-    public void setEnglish(Double english) {
-        this.english = english;
-    }
+    public Double getHindi() { return hindi; }
+    public void setHindi(Double hindi) { this.hindi = hindi; }
 
-    public Double getHindi() {
-        return hindi;
-    }
+    public Double getMath() { return math; }
+    public void setMath(Double math) { this.math = math; }
 
-    public void setHindi(Double hindi) {
-        this.hindi = hindi;
-    }
+    public Double getScience() { return science; }
+    public void setScience(Double science) { this.science = science; }
 
-    public Double getMath() {
-        return math;
-    }
+    public Double getSocialScience() { return socialScience; }
+    public void setSocialScience(Double socialScience) { this.socialScience = socialScience; }
 
-    public void setMath(Double math) {
-        this.math = math;
-    }
+    public Double getGeneralKnowledge() { return generalKnowledge; }
+    public void setGeneralKnowledge(Double generalKnowledge) { this.generalKnowledge = generalKnowledge; }
 
-    public Double getScience() {
-        return science;
-    }
+    public Double getComputer() { return computer; }
+    public void setComputer(Double computer) { this.computer = computer; }
 
-    public void setScience(Double science) {
-        this.science = science;
-    }
-
-    public Double getSocialScience() {
-        return socialScience;
-    }
-
-    public void setSocialScience(Double socialScience) {
-        this.socialScience = socialScience;
-    }
-
-    public Double getGeneralKnowledge() {
-        return generalKnowledge;
-    }
-
-    public void setGeneralKnowledge(Double generalKnowledge) {
-        this.generalKnowledge = generalKnowledge;
-    }
-
-    public Double getComputer() {
-        return computer;
-    }
-
-    public void setComputer(Double computer) {
-        this.computer = computer;
-    }
-
-    public LocalDate getResultDate() {
-        return resultDate;
-    }
-
-    public void setResultDate(LocalDate resultDate) {
-        this.resultDate = resultDate;
-    }
+    public LocalDate getResultDate() { return resultDate; }
+    public void setResultDate(LocalDate resultDate) { this.resultDate = resultDate; }
 }

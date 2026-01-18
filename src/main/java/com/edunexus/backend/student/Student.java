@@ -22,7 +22,7 @@ public class Student {
 	private long stud_mobile;
 	
 	@Column(name = "student_class")
-	private String stud_class;
+	private int stud_class;
 	
 	@Column(name = "student_address")
 	private String stud_address;
@@ -36,8 +36,11 @@ public class Student {
 	@Column(name = "basicFee")  // Use backticks to preserve exact case
 	private double basicFee;
 	
-	@Column(name = "password")
-	private String password;
+	@Column(name = "image_url", length = 300)
+	private String imageUrl;
+
+	public String getImageUrl() { return imageUrl; }
+	public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
 	
 	public String getStud_id() {
 		return stud_id;	
@@ -71,11 +74,11 @@ public class Student {
 		this.stud_mobile = stud_mobile;
 	}
 
-	public String getStud_class() {
+	public int getStud_class() {
 		return stud_class;
 	}
 
-	public void setStud_class(String stud_class) {
+	public void setStud_class(int stud_class) {
 		this.stud_class = stud_class;
 	}
 
@@ -110,15 +113,6 @@ public class Student {
 	public void setbasicFee(double basicFee) {
         this.basicFee = basicFee;
     }
-
-	public String getPassword() {
-		return password;
-	}
-
-	public void setPassword(String password) {
-		this.password = password;
-	}
-	
 	
 	
 }

@@ -28,7 +28,7 @@ public class AdminExportService {
               .append(csv(String.valueOf(t.getTeacher_mob()))).append(",")
               .append(csv(String.valueOf(t.getTeacher_exp()))).append(",")
               .append(csv(t.getTeacher_add())).append(",")
-              .append(csv(t.getTeacher_class())).append(",")
+              .append(csv(String.valueOf(t.getTeacher_class()))).append(",")
               .append(csv(t.getTeacher_qualification())).append(",")
               .append(csv(role)).append(",")
               .append(csv(defaultPassword))
@@ -38,10 +38,10 @@ public class AdminExportService {
         return sb.toString();
     }
 
-    private String csv(String s) {
-        if (s == null) return "";
+    private String csv(String i) {
+        if (i == null) return "";
         // escape quotes + wrap if contains comma/newline
-        String escaped = s.replace("\"", "\"\"");
+        String escaped = i.replace("\"", "\"\"");
         if (escaped.contains(",") || escaped.contains("\n") || escaped.contains("\r")) {
             return "\"" + escaped + "\"";
         }

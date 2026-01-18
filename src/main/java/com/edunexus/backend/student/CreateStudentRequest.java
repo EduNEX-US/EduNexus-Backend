@@ -23,18 +23,21 @@ public class CreateStudentRequest {
 	@JsonProperty("guardian")
 	private String studentGuardian;
 	@JsonProperty("sClass")
-	private String studentClass;
-	@JsonProperty("basicFee")
-	private double basicFee;
+	private int studentClass;
+	
 	@JsonProperty("role")
 	private String role;
 	
-//	public String getStudentId() {
-//		return studentId;
-//	}
-//	public void setStudentId(String studentId) {
-//		this.studentId = studentId;
-//	}
+	@JsonProperty("image")
+	private String imageUrl;
+	public String getImageUrl() {
+		return imageUrl; 
+	}
+	
+	public void setImageUrl(String imageUrl) {
+		this.imageUrl = imageUrl; 
+	}
+	
 	public String getStudentPassword() {
 		return studentPassword;
 	}
@@ -59,10 +62,10 @@ public class CreateStudentRequest {
 	public void setStudentMobile(long studentMobile) {
 		this.studentMobile = studentMobile;
 	}
-	public String getStudentClass() {
+	public int getStudentClass() {
 		return studentClass;
 	}
-	public void setStudentClass(String studentClass) {
+	public void setStudentClass(int studentClass) {
 		this.studentClass = studentClass;
 	}
 	public String getStudentAddress() {
@@ -83,12 +86,7 @@ public class CreateStudentRequest {
 	public void setStudentGuardian(String studentGuardian) {
 		this.studentGuardian = studentGuardian;
 	}
-	public double getBasicFee() {
-		return basicFee;
-	}
-	public void setBasicFee(double basicFee) {
-		this.basicFee = basicFee;
-	}
+
 	public String getRole() {
 		return role;
 	}

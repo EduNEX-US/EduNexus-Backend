@@ -28,7 +28,7 @@ public class AdminSeeder {
                 9999999991L,
                 "Head Office",
                 10,
-                "ALL",
+                0,
                 "PhD Education");
 
             seedOneAdmin(loginRepo, teacherRepo, encoder,
@@ -38,7 +38,7 @@ public class AdminSeeder {
                 9999999992L,
                 "Branch Office",
                 8,
-                "ALL",
+                0,
                 "M.A B.Ed");
         };
     }
@@ -54,7 +54,7 @@ public class AdminSeeder {
             long mobile,
             String address,
             int experience,
-            String teacherClass,
+            int teacherClass,
             String qualification
     ) {
 

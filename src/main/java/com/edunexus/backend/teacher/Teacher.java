@@ -28,7 +28,7 @@ public class Teacher {
 	private int teacher_exp;
 	
 	@Column(name = "teacher_class")
-	private String teacher_class;
+	private int teacher_class;
 	
 	@Column(name = "isAdmin")
 	private int isAdmin;
@@ -78,8 +78,8 @@ public class Teacher {
 		return teacher_mob;
 	}
 
-	public void setTeacher_mob(long teacher_mob) {
-		this.teacher_mob = teacher_mob;
+	public void setTeacher_mob(long string) {
+		this.teacher_mob = string;
 	}
 	public String getTeacher_add() {
 		return teacher_add;
@@ -97,11 +97,11 @@ public class Teacher {
 		this.teacher_exp = teacher_exp;
 	}
 
-	public String getTeacher_class() {
+	public int getTeacher_class() {
 		return teacher_class;
 	}
 
-	public void setTeacher_class(String teacher_class) {
+	public void setTeacher_class(int teacher_class) {
 		this.teacher_class = teacher_class;
 	}
 

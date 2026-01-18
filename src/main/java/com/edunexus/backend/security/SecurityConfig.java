@@ -31,8 +31,17 @@ public class SecurityConfig {
             	    // change password must be authenticated
             	    .requestMatchers(HttpMethod.POST, "/auth/change-password").authenticated()
 
+            	    .requestMatchers("/marks/**").hasRole("TEACHER")
+
+            	    .requestMatchers(HttpMethod.POST, "/students").hasRole("TEACHER")
+
+            	    .requestMatchers(HttpMethod.DELETE, "/marks/**").hasRole("TEACHER")
+
             	    // admin endpoints
             	    .requestMatchers("/admin/**").hasRole("ADMIN")
+            	    
+            	 // ✅ allow teacher to import/export students
+                    .requestMatchers("/teacher/students/**").hasRole("TEACHER")
 
             	    .requestMatchers(HttpMethod.DELETE, "/admin/teacher/**").hasRole("ADMIN")
 

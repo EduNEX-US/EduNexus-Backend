@@ -25,7 +25,7 @@ public class CreateTeacherRequest {
 
 	
 	@JsonProperty("tClass")
-	private String teacherClass;
+	private int teacherClass;
 	
 	
 	@JsonProperty("qualification")
@@ -101,11 +101,11 @@ public class CreateTeacherRequest {
 		this.teacherExp = teacherExp;
 	}
 
-	public String getTeacherClass() {
+	public int getTeacherClass() {
 		return teacherClass;
 	}
 
-	public void setTeacherClass(String teacherClass) {
+	public void setTeacherClass(int teacherClass) {
 		this.teacherClass = teacherClass;
 	}
 
