@@ -45,11 +45,25 @@ public class MarksController {
         return ResponseEntity.ok(rows);
     }
 
+//    @GetMapping("/me")
+//    public ResponseEntity<?> getForStudent(
+//            Authentication auth,
+//            @RequestParam("examSession") String examSession
+//    ) {
+//        String studentId = (String) auth.getPrincipal();
+//        return ResponseEntity.ok(marksService.getMyMarksForSession(studentId, examSession));
+//    }
+    @GetMapping("/me/latest")
+    public ResponseEntity<?> getLatestForStudent(Authentication auth) {
+        String studentId = (String) auth.getPrincipal();
+        Marks m = marksService.getMyLatestMarks(studentId);
+        return ResponseEntity.ok(m); // can be null (frontend shows "No marks yet")
+    }
+
+
     @GetMapping("/me")
-    public ResponseEntity<?> getForStudent(
-            Authentication auth,
-            @RequestParam("examSession") String examSession
-    ) {
+    public ResponseEntity<?> getForStudent(Authentication auth,
+                                          @RequestParam("examSession") String examSession) {
         String studentId = (String) auth.getPrincipal();
         return ResponseEntity.ok(marksService.getMyMarksForSession(studentId, examSession));
     }

@@ -3,12 +3,10 @@ package com.edunexus.backend.attendance;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -23,121 +21,55 @@ import com.edunexus.backend.teacher.TeacherRepository;
 @Service
 public class AttendanceService {
 
-    @Autowired private AttendanceSessionRepository sessionRepo;
-    @Autowired private AttendanceAbsenceRepository absenceRepo;
-
+    @Autowired private AttendanceRepository attendanceRepo;
     @Autowired private StudentRepository studentRepo;
-    @Autowired private TeacherRepository teacherRepo;
 
-    // ✅ Teacher must be allowed for this class
+    @Autowired(required = false)
+    private TeacherRepository teacherRepo;
+
     private void validateTeacherForClass(String teacherId, int classId) {
-        Teacher t = teacherRepo.findById(teacherId)
-            .orElseThrow(() -> new RuntimeException("Teacher not found: " + teacherId));
+        if (teacherRepo == null) return; // if you don't have teacherRepo wired
 
-        // your teacher_class field might be String like "10" or "10,11"
-        // Since you said now teacher handles only 1 class, keep it simple:
+        Teacher t = teacherRepo.findById(teacherId)
+            .orElseThrow(() -> new RuntimeException("TEACHER_NOT_FOUND"));
+
         int teacherClass = Integer.parseInt(String.valueOf(t.getTeacher_class()));
         if (teacherClass != classId) {
-            throw new RuntimeException("Forbidden: teacher not assigned to class " + classId);
+            throw new RuntimeException("FORBIDDEN_TEACHER_NOT_ASSIGNED_TO_CLASS");
         }
     }
 
-    public Map<String, Object> getAttendanceForClassByDate(int classId, LocalDate date) {
-
-        // session indicates "attendance was marked"
-        Optional<AttendanceSession> sessionOpt = sessionRepo.findByClassIdAndDate(classId, date);
-
-        if (sessionOpt.isEmpty()) {
-            return Map.of(
-                "marked", false,
-                "date", date.toString(),
-                "classId", classId,
-                "rows", List.of()
-            );
+    private void validateNumbers(int total, int present, int absent, int late) {
+        if (total < 0 || present < 0 || absent < 0 || late < 0) {
+            throw new RuntimeException("NEGATIVE_VALUES_NOT_ALLOWED");
         }
-
-        AttendanceSession session = sessionOpt.get();
-
-        // All students of that class
-     // All students of that class
-        List<Student> students = studentRepo.findByStudClass(classId);
-
-        // absentees/late for that session
-        List<AttendanceAbsence> absentList = absenceRepo.findBySessionId(session.getId());
-
-        // Map: studentId -> status (ABSENT/LATE)
-        Map<String, AttendanceStatus> absentMap = absentList.stream()
-            .collect(Collectors.toMap(
-                AttendanceAbsence::getStudentId,
-                AttendanceAbsence::getStatus,
-                (oldVal, newVal) -> newVal // handle duplicates safely
-            ));
-
-        List<AttendanceRowDTO> rows = students.stream().map(s -> {
-            AttendanceStatus status = absentMap.get(s.getStud_id());
-            String st = (status == null) ? "PRESENT" : status.name();
-
-            return new AttendanceRowDTO(
-                s.getStud_id(),
-                s.getStud_name(),
-                s.getStud_email(),
-                s.getStud_address(),
-                s.getStud_guardian(),
-                st
-            );
-        }).toList();
-
-
-        return Map.of(
-            "marked", true,
-            "date", date.toString(),
-            "classId", classId,
-            "rows", rows
-        );
+        if (present + absent + late > total) {
+            throw new RuntimeException("P_A_L_EXCEEDS_TOTAL");
+        }
     }
-    
+
+    private int parseIntCell(String[] c, int idx, String errKey) {
+        if (c.length <= idx) throw new RuntimeException(errKey);
+        String v = c[idx] == null ? "" : c[idx].trim();
+        if (v.isBlank()) throw new RuntimeException(errKey);
+        try { return Integer.parseInt(v); }
+        catch (Exception e) { throw new RuntimeException(errKey); }
+    }
+
+    private void validateYearMonth(String yearMonth) {
+        // expected "YYYY-MM"
+        if (yearMonth == null || !yearMonth.matches("\\d{4}-\\d{2}")) {
+            throw new RuntimeException("INVALID_YEAR_MONTH");
+        }
+    }
+
     @Transactional
-    public AttendanceSession upsertSession(int classId, LocalDate date, String teacherId) {
-        return sessionRepo.findByClassIdAndDate(classId, date).orElseGet(() -> {
-            AttendanceSession s = new AttendanceSession();
-            s.setClassId(classId);
-            s.setDate(date);
-            s.setTeacherId(teacherId);
-            return sessionRepo.save(s);
-        });
-    }
-
-    private boolean studentBelongsToClass(String studentId, int classId) {
-        Optional<Student> s = studentRepo.findById(studentId);
-        return s.isPresent() && s.get().getStud_class() == classId;
-    }
-
-    private AttendanceStatus parseStatus(String raw) {
-        if (raw == null || raw.isBlank()) return AttendanceStatus.ABSENT;
-        raw = raw.trim().toUpperCase();
-        if (raw.equals("LATE")) return AttendanceStatus.LATE;
-        return AttendanceStatus.ABSENT;
-    }
-
-    /** Replace attendance absences for day: delete old rows, insert new valid ones */
-    @Transactional
-    public AttendanceUploadResult uploadAbsenteesCsv(
-            String teacherId,
-            int classId,
-            LocalDate date,
-            MultipartFile file
-    ) throws Exception {
-
+    public AttendanceUploadResult uploadCsv(String teacherId, int classId, String yearMonth, MultipartFile file) throws Exception {
         validateTeacherForClass(teacherId, classId);
+        validateYearMonth(yearMonth);
 
-        // session
-        AttendanceSession session = upsertSession(classId, date, teacherId);
+        List<String[]> rows = new ArrayList<>();
 
-        // Replace day data
-        absenceRepo.deleteBySessionId(session.getId());
-
-        // Read CSV
-        List<String[]> parsed = new ArrayList<>();
         try (BufferedReader br = new BufferedReader(
                 new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8))) {
 
@@ -148,102 +80,201 @@ public class AttendanceService {
                 line = line.trim();
                 if (line.isBlank()) continue;
 
-                // skip header if present
+                // header skip
                 if (first && line.toLowerCase().contains("studentid")) {
                     first = false;
                     continue;
                 }
                 first = false;
 
-                String[] cols = line.split(",", -1);
-                parsed.add(cols);
+                rows.add(line.split(",", -1));
             }
         }
 
-        AttendanceUploadResult result = new AttendanceUploadResult(parsed.size());
+        AttendanceUploadResult result = new AttendanceUploadResult(rows.size());
 
-        // insert rows
-        for (String[] cols : parsed) {
-            String studentId = (cols.length >= 1) ? cols[0].trim() : "";
-            String statusRaw = (cols.length >= 2) ? cols[1].trim() : "";
+        for (String[] c : rows) {
+            String studentId = c.length > 0 ? c[0].trim() : "";
 
             if (studentId.isBlank()) {
                 result.incFailed();
-                result.addRow(new AttendanceUploadRowResult("", "", "FAILED", "EMPTY_STUDENT_ID"));
+                result.addRow(new AttendanceUploadRowResult("", "FAILED", "-", "EMPTY_STUDENT_ID"));
                 continue;
             }
 
-            // ✅ validate student exists AND belongs to class
-            if (!studentBelongsToClass(studentId, classId)) {
+            try {
+                Student s = studentRepo.findById(studentId)
+                        .orElseThrow(() -> new RuntimeException("STUDENT_NOT_FOUND"));
+
+                if (s.getStud_class() != classId) {
+                    throw new RuntimeException("STUDENT_NOT_IN_CLASS");
+                }
+
+                int totalDays = parseIntCell(c, 1, "INVALID_TOTAL_DAYS");
+                int present   = parseIntCell(c, 2, "INVALID_PRESENT");
+                int absent    = parseIntCell(c, 3, "INVALID_ABSENT");
+                int late      = (c.length > 4 && c[4] != null && !c[4].trim().isBlank())
+                        ? Integer.parseInt(c[4].trim())
+                        : 0;
+
+                validateNumbers(totalDays, present, absent, late);
+
+                Optional<AttendanceMonth> existing =
+                        attendanceRepo.findByStudentAndMonth(studentId, yearMonth);
+
+                AttendanceMonth a = existing.orElseGet(AttendanceMonth::new);
+                a.setStudentId(studentId);
+                a.setClassId(classId);
+                a.setYearMonth(yearMonth);
+
+                // ✅ UPSERT (replace month values)
+                a.setTotalDays(totalDays);
+                a.setPresent(present);
+                a.setAbsent(absent);
+                a.setLate(late);
+
+                a.setUpdatedBy(teacherId);
+                a.setUpdatedAt(LocalDateTime.now());
+
+                attendanceRepo.save(a);
+
+                result.incSuccess();
+                result.addRow(new AttendanceUploadRowResult(
+                        studentId, "OK", existing.isPresent() ? "UPDATED" : "INSERTED", ""
+                ));
+            } catch (Exception ex) {
+                // ✅ "will not accept that student's attendance"
+                // => skip that row, do not stop the import
                 result.incFailed();
-                result.addRow(new AttendanceUploadRowResult(studentId, statusRaw, "FAILED",
-                        "STUDENT_NOT_FOUND_OR_NOT_IN_CLASS"));
-                continue;
+                result.addRow(new AttendanceUploadRowResult(studentId, "FAILED", "-", ex.getMessage()));
             }
-
-            AttendanceStatus status = parseStatus(statusRaw);
-
-            AttendanceAbsence a = new AttendanceAbsence();
-            a.setSessionId(session.getId());
-            a.setStudentId(studentId);
-            a.setStatus(status);
-            absenceRepo.save(a);
-
-            result.incSuccess();
-            result.addRow(new AttendanceUploadRowResult(studentId, status.name(), "OK", ""));
         }
 
         return result;
     }
 
-    /** Manual add/replace for day */
-    @Transactional
-    public AttendanceUploadResult uploadManual(
-            String teacherId,
-            AttendanceManualRequest req
-    ) {
-        int classId = req.getClassId();
-        LocalDate date = LocalDate.parse(req.getDate());
-
+    public List<AttendanceMonth> getForTeacher(int classId, String yearMonth, String teacherId) {
         validateTeacherForClass(teacherId, classId);
+        validateYearMonth(yearMonth);
+        return attendanceRepo.findByClassAndMonth(classId, yearMonth);
+    }
 
-        AttendanceSession session = upsertSession(classId, date, teacherId);
+    public record AttendanceMonthStatusDTO(boolean uploaded, int count) {}
 
-        // replace whole day
-        absenceRepo.deleteBySessionId(session.getId());
+    public AttendanceMonthStatusDTO monthStatus(String teacherId, int classId, String yearMonth) {
+        validateTeacherForClass(teacherId, classId);
+        validateYearMonth(yearMonth);
 
-        List<AttendanceManualRequest.Entry> entries = req.getEntries() == null ? List.of() : req.getEntries();
-        AttendanceUploadResult result = new AttendanceUploadResult(entries.size());
+        int count = attendanceRepo.countByClassAndMonth(classId, yearMonth);
+        return new AttendanceMonthStatusDTO(count > 0, count);
+    }
 
-        for (AttendanceManualRequest.Entry e : entries) {
-            String studentId = e.getStudentId() == null ? "" : e.getStudentId().trim();
-            String statusRaw = e.getStatus() == null ? "" : e.getStatus().trim();
+    
+    public AttendanceSummaryDTO getMySummary(String studentId) {
+        Object[] t = attendanceRepo.totalsForStudent(studentId);
+        int total = ((Number) t[0]).intValue();
+        int present = ((Number) t[1]).intValue();
+        int absent = ((Number) t[2]).intValue();
+        int late = ((Number) t[3]).intValue();
+        return new AttendanceSummaryDTO(total, present, absent, late);
+    }
 
-            if (studentId.isBlank()) {
-                result.incFailed();
-                result.addRow(new AttendanceUploadRowResult("", "", "FAILED", "EMPTY_STUDENT_ID"));
-                continue;
-            }
+    public List<AttendanceMonth> getMyMonthly(String studentId) {
+        return attendanceRepo.findAllForStudent(studentId);
+    }
 
-            if (!studentBelongsToClass(studentId, classId)) {
-                result.incFailed();
-                result.addRow(new AttendanceUploadRowResult(studentId, statusRaw, "FAILED",
-                        "STUDENT_NOT_FOUND_OR_NOT_IN_CLASS"));
-                continue;
-            }
+    
+    @Transactional
+    public AttendanceMonth updateSingle(String teacherId, int classId, String studentId, String yearMonth, AttendanceUpdateRequest req) {
+        validateTeacherForClass(teacherId, classId);
+        validateYearMonth(yearMonth);
 
-            AttendanceStatus status = parseStatus(statusRaw);
+        Student s = studentRepo.findById(studentId)
+                .orElseThrow(() -> new RuntimeException("STUDENT_NOT_FOUND"));
 
-            AttendanceAbsence a = new AttendanceAbsence();
-            a.setSessionId(session.getId());
-            a.setStudentId(studentId);
-            a.setStatus(status);
-            absenceRepo.save(a);
-
-            result.incSuccess();
-            result.addRow(new AttendanceUploadRowResult(studentId, status.name(), "OK", ""));
+        if (s.getStud_class() != classId) {
+            throw new RuntimeException("STUDENT_NOT_IN_CLASS");
         }
 
-        return result;
+        // ✅ do NOT create if missing
+        AttendanceMonth a = attendanceRepo.findByStudentAndMonth(studentId, yearMonth)
+                .orElseThrow(() -> new RuntimeException("ATTENDANCE_NOT_UPLOADED_FOR_MONTH"));
+
+        int total = req.getTotalDays() == null ? a.getTotalDays() : req.getTotalDays();
+        int present = req.getPresent() == null ? a.getPresent() : req.getPresent();
+        int absent = req.getAbsent() == null ? a.getAbsent() : req.getAbsent();
+        int late = req.getLate() == null ? a.getLate() : req.getLate();
+
+        validateNumbers(total, present, absent, late);
+
+        a.setTotalDays(total);
+        a.setPresent(present);
+        a.setAbsent(absent);
+        a.setLate(late);
+
+        a.setUpdatedBy(teacherId);
+        a.setUpdatedAt(LocalDateTime.now());
+
+        return attendanceRepo.save(a);
     }
+
+
+    public List<AttendanceTeacherRowDTO> getStudentsOfClassWithMonth(String teacherId, int classId, String yearMonth) {
+        validateTeacherForClass(teacherId, classId);
+        validateYearMonth(yearMonth);
+
+        // 1) all students in this class
+        List<Student> students = studentRepo.findByStudClass(classId);
+
+        // 2) all attendance rows that exist for this class+month
+        List<AttendanceMonth> monthRows = attendanceRepo.findByClassAndMonth(classId, yearMonth);
+
+        // 3) map by studentId for fast merge
+        java.util.Map<String, AttendanceMonth> map = new java.util.HashMap<>();
+        for (AttendanceMonth a : monthRows) map.put(a.getStudentId(), a);
+
+        // 4) build output: always return all students (even if attendance not uploaded)
+        List<AttendanceTeacherRowDTO> out = new java.util.ArrayList<>();
+
+        for (Student s : students) {
+            AttendanceMonth a = map.get(s.getStud_id());
+
+            if (a == null) {
+                // ✅ month not uploaded for this student => return null values
+                out.add(new AttendanceTeacherRowDTO(
+                        s.getStud_id(),
+                        s.getStud_name(),
+                        s.getStud_email(),
+                        s.getStud_address(),
+                        s.getStud_guardian(),
+                        String.valueOf(s.getStud_mobile()),
+                        classId,
+                        yearMonth,
+                        null, null, null, null,
+                        false
+                ));
+            } else {
+                // ✅ uploaded row exists
+                out.add(new AttendanceTeacherRowDTO(
+                        s.getStud_id(),
+                        s.getStud_name(),
+                        s.getStud_email(),
+                        s.getStud_address(),
+                        s.getStud_guardian(),
+                        String.valueOf(s.getStud_mobile()),
+                        classId,
+                        yearMonth,
+                        a.getTotalDays(),
+                        a.getPresent(),
+                        a.getAbsent(),
+                        a.getLate(),
+                        true
+                ));
+            }
+        }
+
+        return out;
+    }
+
+
 }

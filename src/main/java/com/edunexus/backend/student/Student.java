@@ -33,9 +33,6 @@ public class Student {
 	@Column(name = "student_guardian")
 	private String stud_guardian;
 	
-	@Column(name = "basicFee")  // Use backticks to preserve exact case
-	private double basicFee;
-	
 	@Column(name = "image_url", length = 300)
 	private String imageUrl;
 
@@ -105,14 +102,6 @@ public class Student {
 	public void setStud_guardian(String stud_guardian) {
 		this.stud_guardian = stud_guardian;
 	}
-
-	public double getbasicFee() {
-	    return basicFee;
-	}
-
-	public void setbasicFee(double basicFee) {
-        this.basicFee = basicFee;
-    }
 	
 	
 }
