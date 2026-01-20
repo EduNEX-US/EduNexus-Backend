@@ -5,6 +5,7 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -244,11 +245,36 @@ public class MarksService {
     }
 
     // ✅ Student fetch: my marks by session
+//    public List<Marks> getMyMarksForSession(String studentId, String examSession) {
+//        ExamSession session = parseSession(examSession);
+//
+//        return marksRepo.findMyMarksForSession(studentId, session)
+//            .map(Collections::singletonList)      // Optional<Marks> -> List<Marks> (size 1)
+//            .orElseGet(Collections::emptyList);   // if not present -> []
+//    }
+    public Marks getMyLatestMarks(String studentId) {
+        // highest -> lowest
+        ExamSession[] order = new ExamSession[]{
+                ExamSession.END,
+                ExamSession.UNIT_2,
+                ExamSession.MID_SEM,
+                ExamSession.UNIT_1
+        };
+
+        for (ExamSession s : order) {
+            var opt = marksRepo.findMyMarksForSession(studentId, s);
+            if (opt.isPresent()) return opt.get();
+        }
+        return null; // none exists
+    }
+
+    
     public Marks getMyMarksForSession(String studentId, String examSession) {
         ExamSession session = parseSession(examSession);
-        return marksRepo.findMyMarksForSession(studentId, session)
-            .orElseThrow(() -> new RuntimeException("MARKS_NOT_FOUND"));
+        return marksRepo.findMyMarksForSession(studentId, session).orElse(null);
     }
+
+
 
     private Double parseDouble(String[] c, int idx) {
         if (c.length <= idx) return null;

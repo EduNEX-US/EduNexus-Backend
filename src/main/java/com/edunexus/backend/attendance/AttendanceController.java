@@ -1,70 +1,92 @@
 package com.edunexus.backend.attendance;
 
-import java.time.LocalDate;
-import java.util.Map;
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 @RestController
-@RequestMapping("/teacher/attendance")
+@RequestMapping("/attendance")
 @CrossOrigin("*")
 public class AttendanceController {
 
     @Autowired private AttendanceService attendanceService;
 
-    private String currentUserId() {
-        Object p = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        return String.valueOf(p);
+    // ✅ Teacher uploads monthly CSV for his class
+    @PostMapping(value = "/csv", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> uploadAttendanceCsv(
+            Authentication auth,
+            @RequestParam("classId") int classId,
+            @RequestParam("yearMonth") String yearMonth,
+            @RequestParam("file") MultipartFile file
+    ) throws Exception {
+        String teacherId = (String) auth.getPrincipal();
+        return ResponseEntity.ok(attendanceService.uploadCsv(teacherId, classId, yearMonth, file));
+    }
+
+    // ✅ Teacher view monthly list
+    @GetMapping("/teacher")
+    public ResponseEntity<?> getForTeacher(
+            Authentication auth,
+            @RequestParam("classId") int classId,
+            @RequestParam("yearMonth") String yearMonth
+    ) {
+        String teacherId = (String) auth.getPrincipal();
+        List<AttendanceMonth> rows = attendanceService.getForTeacher(classId, yearMonth, teacherId);
+        return ResponseEntity.ok(rows);
+    }
+    
+    @GetMapping("/teacher/month")
+    public ResponseEntity<?> monthStatus(
+            Authentication auth,
+            @RequestParam("classId") int classId,
+            @RequestParam("yearMonth") String yearMonth
+    ) {
+        String teacherId = (String) auth.getPrincipal();
+        return ResponseEntity.ok(attendanceService.monthStatus(teacherId, classId, yearMonth));
     }
 
     
-    @GetMapping("/class/{classId}")
-    public ResponseEntity<?> getForClass(
-            @PathVariable int classId,
-            @RequestParam(required = false) String date
-    ) {
-        try {
-            LocalDate d = (date == null || date.isBlank()) ? LocalDate.now() : LocalDate.parse(date);
-            Map<String, Object> result = attendanceService.getAttendanceForClassByDate(classId, d);
-            return ResponseEntity.ok(result);
-        } catch (Exception e) {
-            return ResponseEntity.status(500).body(Map.of("error", "Error fetching attendance"));
-        }
-    }
-    // ✅ CSV upload: replace for date+class
-    @PostMapping(value="/upload-csv", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<?> uploadCsv(
+    
+    @GetMapping("/teacher/students")
+    public ResponseEntity<?> getStudentsWithAttendanceMonth(
+            Authentication auth,
             @RequestParam("classId") int classId,
-            @RequestParam("date") String date, // yyyy-MM-dd
-            @RequestParam("file") MultipartFile file
+            @RequestParam("yearMonth") String yearMonth
     ) {
-        try {
-            String teacherId = currentUserId();
-            AttendanceUploadResult result = attendanceService.uploadAbsenteesCsv(
-                    teacherId, classId, LocalDate.parse(date), file
-            );
-            return ResponseEntity.ok(Map.of("message", "Uploaded", "result", result));
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(500).body(Map.of("error", e.getMessage()));
-        }
+        String teacherId = (String) auth.getPrincipal();
+        return ResponseEntity.ok(attendanceService.getStudentsOfClassWithMonth(teacherId, classId, yearMonth));
     }
 
-    // ✅ Manual upload: replace for date+class
-    @PostMapping(value="/upload-manual", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> uploadManual(@RequestBody AttendanceManualRequest req) {
-        try {
-            String teacherId = currentUserId();
-            AttendanceUploadResult result = attendanceService.uploadManual(teacherId, req);
-            return ResponseEntity.ok(Map.of("message", "Uploaded", "result", result));
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(500).body(Map.of("error", e.getMessage()));
-        }
+
+    // ✅ Teacher edit a student's month row
+    @PutMapping("/teacher/{studentId}/{yearMonth}")
+    public ResponseEntity<?> updateSingle(
+            Authentication auth,
+            @RequestParam("classId") int classId,
+            @PathVariable String studentId,
+            @PathVariable String yearMonth,
+            @RequestBody AttendanceUpdateRequest req
+    ) {
+        String teacherId = (String) auth.getPrincipal();
+        return ResponseEntity.ok(attendanceService.updateSingle(teacherId, classId, studentId, yearMonth, req));
+    }
+
+    // ✅ Student: totals summary for dashboard
+    @GetMapping("/me/summary")
+    public ResponseEntity<?> mySummary(Authentication auth) {
+        String studentId = (String) auth.getPrincipal();
+        return ResponseEntity.ok(attendanceService.getMySummary(studentId));
+    }
+
+    // ✅ Student: month-wise list (for chart later)
+    @GetMapping("/me/monthly")
+    public ResponseEntity<?> myMonthly(Authentication auth) {
+        String studentId = (String) auth.getPrincipal();
+        return ResponseEntity.ok(attendanceService.getMyMonthly(studentId));
     }
 }

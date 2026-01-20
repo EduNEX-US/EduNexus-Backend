@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.edunexus.backend.login.Login;
 import com.edunexus.backend.login.LoginRepository;
@@ -24,6 +25,43 @@ public class StudentService {
 	private PasswordEncoder passwordEncoder;
 
 
+    @Autowired private StudentImageService studentImageService;
+
+    public StudentMeResponse getMe(String studentId) {
+        Student s = studentRepo.findById(studentId)
+                .orElseThrow(() -> new RuntimeException("STUDENT_NOT_FOUND"));
+
+        return new StudentMeResponse(
+                s.getStud_id(),
+                s.getStud_name(),
+                s.getStud_email(),
+                s.getStud_mobile(),
+                s.getStud_class(),
+                s.getStud_address(),
+                s.getStud_alt_mob(),
+                s.getStud_guardian(),
+                s.getImageUrl() == null ? "" : s.getImageUrl()
+        );
+    }
+
+    @Transactional
+    public StudentMeResponse updateMe(String studentId, StudentUpdateRequest req, MultipartFile image) throws Exception {
+        Student s = studentRepo.findById(studentId)
+                .orElseThrow(() -> new RuntimeException("STUDENT_NOT_FOUND"));
+
+        if (req.getName() != null) s.setStud_name(req.getName().trim());
+        if (req.getEmail() != null) s.setStud_email(req.getEmail().trim());
+        if (req.getMobile() != null) s.setStud_mobile(req.getMobile());
+        if (req.getAddress() != null) s.setStud_address(req.getAddress().trim());
+
+        if (image != null && !image.isEmpty()) {
+            String url = studentImageService.saveStudentImage(image);
+            s.setImageUrl(url);
+        }
+
+        studentRepo.save(s);
+        return getMe(studentId);
+    }
 	public List<StudentDTO> getStudentsByClass(int studClass) {
 	    return studentRepo.findByStudClass(studClass)
 	            .stream()
