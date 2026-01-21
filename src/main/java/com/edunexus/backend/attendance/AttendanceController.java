@@ -50,7 +50,12 @@ public class AttendanceController {
         return ResponseEntity.ok(attendanceService.monthStatus(teacherId, classId, yearMonth));
     }
 
-    
+    @GetMapping("/me/monthly-dto")
+    public ResponseEntity<?> myMonthlyDTO(Authentication auth) {
+        String studentId = (String) auth.getPrincipal();
+        return ResponseEntity.ok(attendanceService.getMyMonthlyDTO(studentId));
+    }
+
     
     @GetMapping("/teacher/students")
     public ResponseEntity<?> getStudentsWithAttendanceMonth(

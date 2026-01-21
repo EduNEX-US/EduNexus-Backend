@@ -169,15 +169,44 @@ public class AttendanceService {
         return new AttendanceMonthStatusDTO(count > 0, count);
     }
 
-    
     public AttendanceSummaryDTO getMySummary(String studentId) {
-        Object[] t = attendanceRepo.totalsForStudent(studentId);
+        List<Object[]> rows = attendanceRepo.totalsForStudent(studentId);
+
+        Object[] t = (rows == null || rows.isEmpty() || rows.get(0) == null)
+                ? new Object[] {0, 0, 0, 0}
+                : rows.get(0);
+
         int total = ((Number) t[0]).intValue();
         int present = ((Number) t[1]).intValue();
         int absent = ((Number) t[2]).intValue();
         int late = ((Number) t[3]).intValue();
+
         return new AttendanceSummaryDTO(total, present, absent, late);
     }
+
+    public List<AttendanceStudentMonthDTO> getMyMonthlyDTO(String studentId) {
+        List<AttendanceMonth> rows = attendanceRepo.findAllForStudent(studentId);
+
+        List<AttendanceStudentMonthDTO> out = new java.util.ArrayList<>();
+        for (AttendanceMonth a : rows) {
+            int total = a.getTotalDays();
+            int present = a.getPresent();
+            int absent = a.getAbsent();
+            int late = a.getLate();
+            double pct = total <= 0 ? 0.0 : (present * 100.0 / total);
+
+            out.add(new AttendanceStudentMonthDTO(
+                    a.getYearMonth(),
+                    total,
+                    present,
+                    absent,
+                    late,
+                    pct
+            ));
+        }
+        return out;
+    }
+
 
     public List<AttendanceMonth> getMyMonthly(String studentId) {
         return attendanceRepo.findAllForStudent(studentId);
