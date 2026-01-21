@@ -40,12 +40,13 @@ public interface AttendanceRepository extends JpaRepository<AttendanceMonth, Lon
     List<AttendanceMonth> findAllForStudent(@Param("studentId") String studentId);
 
     @Query("""
-      SELECT COALESCE(SUM(a.totalDays),0),
-             COALESCE(SUM(a.present),0),
-             COALESCE(SUM(a.absent),0),
-             COALESCE(SUM(a.late),0)
-      FROM AttendanceMonth a
-      WHERE a.studentId = :studentId
-    """)
-    Object[] totalsForStudent(@Param("studentId") String studentId);
+    		  SELECT COALESCE(SUM(a.totalDays),0),
+    		         COALESCE(SUM(a.present),0),
+    		         COALESCE(SUM(a.absent),0),
+    		         COALESCE(SUM(a.late),0)
+    		  FROM AttendanceMonth a
+    		  WHERE a.studentId = :studentId
+    		""")
+    		List<Object[]> totalsForStudent(@Param("studentId") String studentId);
+
 }

@@ -1,15 +1,16 @@
 package com.edunexus.backend.ptm;
 
-import java.util.List;
-import java.util.Optional;
-
+import com.edunexus.backend.ptm.PtmSession;
 import org.springframework.data.jpa.repository.JpaRepository;
+import java.util.List;
 
-public interface PTMRepository extends JpaRepository<PTM, String> {
+public interface PtmRepository extends JpaRepository<PtmSession,Long> {
 
-	List<PTM> findByStatus(String status);
-	
-	Optional<PTM> findByPtmId(String meetingId);
-	
-    List<PTM> findByStatusAndClassName(String status, String sClass);
+ List<PtmSession> findByClassNo(Integer classNo);
+
+ List<PtmSession> findByStudentId(String studentId);
+
+ List<PtmSession> findByAdminId(String adminId);
+
+ List<PtmSession> findByTeacherId(String teacherId);
 }
